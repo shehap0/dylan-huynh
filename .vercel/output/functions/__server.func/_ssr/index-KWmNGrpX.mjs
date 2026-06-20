@@ -270,10 +270,9 @@ function Nav({
     /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#contact", className: `px-5 py-2.5 rounded-full text-ink text-sm font-medium transition-all duration-500 ${light ? "bg-ember hover:bg-ember/80" : "bg-cream hover:bg-ember"}`, children: "Start a project" })
   ] }) });
 }
-const galleryImages = Array.from({
-  length: 26
-}, (_, i) => ({
-  url: `/assets/hero/demo ${11 + i}.jpg`
+const existingHeroImages = [11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 31, 32, 33, 34, 35, 36];
+const galleryImages = existingHeroImages.map((n) => ({
+  url: `/assets/hero/demo ${n}.jpg`
 }));
 const DESIGN_PATTERN = [{
   w: 340,
