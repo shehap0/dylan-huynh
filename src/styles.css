@@ -53,7 +53,8 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  html, body { background: var(--color-background); color: var(--color-foreground); }
+  html { scroll-behavior: smooth; scroll-padding-top: 5rem; background: var(--color-background); color: var(--color-foreground); }
+  body { background: var(--color-background); color: var(--color-foreground); }
   body {
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";

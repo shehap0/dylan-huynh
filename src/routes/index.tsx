@@ -3,6 +3,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -20,6 +27,41 @@ export const Route = createFileRoute("/")({
 
 const img = (seed: string, w = 1600, h = 1000) =>
   `https://picsum.photos/seed/${seed}/${w}/${h}`;
+
+function CountUp({ to, suffix = "", decimals = 0 }: { to: number; suffix?: string; decimals?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [display, setDisplay] = useState(0);
+  const [started, setStarted] = useState(false);
+  useEffect(() => {
+    if (!ref.current || started) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !started) {
+          setStarted(true);
+          const duration = 1500;
+          const startTime = performance.now();
+          const animate = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            setDisplay(to * eased);
+            if (progress < 1) requestAnimationFrame(animate);
+          };
+          requestAnimationFrame(animate);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [to, started]);
+  return (
+    <span ref={ref}>
+      {display.toFixed(decimals)}{suffix}
+    </span>
+  );
+}
 
 /* ============ INTRO LOADER ============ */
 function Intro({ onDone }: { onDone: () => void }) {
@@ -70,7 +112,7 @@ function Intro({ onDone }: { onDone: () => void }) {
 function Nav() {
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[min(94vw,1100px)]">
-      <div className="flex items-center justify-between px-3 py-3 rounded-full border border-cream/10 bg-ink/60 backdrop-blur-xl shadow-2xl">
+      <div className="flex items-center justify-between px-3 py-3 rounded-full border border-cream/10 bg-transparent backdrop-blur-none shadow-2xl">
         <a href="#top" className="flex items-center gap-2 pl-4">
           <span className="h-2 w-2 rounded-full bg-ember" />
           <span className="font-display font-bold tracking-tight text-cream">Dylan Huynh</span>
@@ -112,7 +154,7 @@ function Hero() {
           style={{ fontSize: "clamp(3rem, 7.5vw, 6.5rem)" }}>
         We craft the
         <span className="inline-block align-middle mx-3 md:mx-5 h-[0.7em] w-[1.6em] rounded-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${img("camera-lens", 400, 200)})` }} />
+              style={{ backgroundImage: "url(/assets/japan.jpg)" }} />
         feed, the frame and the brand behind ambitious work.
       </h1>
 
@@ -222,7 +264,7 @@ function SocialShowcase() {
             <div className="absolute bottom-0 left-0 p-8">
               <div className="font-mono text-xs text-ember tracking-[0.3em] mb-3">Case · Linea Coffee</div>
               <h3 className="font-display text-3xl md:text-4xl text-cream leading-tight max-w-md">
-                +312% organic reach in 90 days
+                +<CountUp to={312} />% organic reach in 90 days
               </h3>
             </div>
           </div>
@@ -230,7 +272,7 @@ function SocialShowcase() {
           <div className="bento-card col-span-2 row-span-1 rounded-2xl bg-card border border-cream/10 p-8 flex flex-col justify-between">
             <div className="font-mono text-xs text-cream/50 tracking-[0.3em]">Engagement rate</div>
             <div className="font-display text-[clamp(3rem,6vw,5.5rem)] leading-none text-cream">
-              8.4<span className="text-ember">%</span>
+              <CountUp to={8.4} decimals={1} /><span className="text-ember">%</span>
             </div>
             <div className="text-cream/50 text-sm">Avg. across managed accounts, last 12 months.</div>
           </div>
@@ -269,24 +311,37 @@ function Photography() {
       });
     });
     gsap.utils.toArray<HTMLElement>(".photo-frame").forEach((el) => {
-      gsap.fromTo(el,
-        { scale: 0.85, opacity: 0.4 },
-        {
-          scale: 1, opacity: 1, ease: "none",
-          scrollTrigger: { trigger: el, start: "top 85%", end: "top 30%", scrub: true },
-        });
-      gsap.to(el, {
-        opacity: 0.2, ease: "none",
-        scrollTrigger: { trigger: el, start: "bottom 60%", end: "bottom 20%", scrub: true },
+      const img = el.querySelector("img");
+      if (!img) return;
+      gsap.set(img, { filter: "grayscale(1)" });
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: el,
+          start: "top 85%",
+          end: "bottom 20%",
+          scrub: true,
+        },
+      });
+      tl.fromTo(el, { scale: 0.85, opacity: 0.4 }, { scale: 1, opacity: 1, duration: 0.5 })
+        .to(el, { opacity: 0.2, duration: 0.5 }, 0.5);
+      gsap.to(img, {
+        filter: "grayscale(0)",
+        ease: "none",
+        scrollTrigger: {
+          trigger: el,
+          start: "top 85%",
+          end: "top 30%",
+          scrub: true,
+        },
       });
     });
   }, { scope: ref });
 
   const projects = [
-    { t: "Atelier Noir — SS25 lookbook", k: "Fashion · Studio", s: "fashion-noir" },
-    { t: "Maison Rouge — Restaurant", k: "Food · Editorial", s: "restaurant-food" },
-    { t: "Vahid Khorasani — Portrait", k: "Portrait · Natural light", s: "portrait-man" },
-    { t: "Lumen Watches — Product", k: "Product · Studio", s: "watch-product" },
+    { t: "Atelier Noir — SS25", k: "Fashion · Studio", s: "fashion-noir" },
+    { t: "Maison Rouge — Vogue", k: "Food · Editorial", s: "restaurant-food" },
+    { t: "Vahid Khorasani — photography", k: "Portrait · Natural light", s: "portrait-man" },
+    { t: "Lumen Watches — photography", k: "Product · Studio", s: "watch-product" },
     { t: "Sahar Architecture — Spaces", k: "Architecture · On location", s: "architecture-space" },
   ];
 
@@ -309,9 +364,9 @@ function Photography() {
         <div className="md:col-span-7 space-y-24">
           {projects.map((p, i) => (
             <figure key={p.s} className="photo-frame group">
-              <div className="overflow-hidden rounded-md bg-ink/5">
+              <div className="overflow-hidden rounded-md bg-ink/5 max-w-2xl mx-auto">
                 <img
-                  src={img(p.s, 1400, 1700)}
+                  src={`/assets/demo ${i + 1}.jpg`}
                   alt={p.t}
                   className="w-full h-auto object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
                 />
@@ -333,11 +388,11 @@ function Photography() {
 /* ============ DIGITAL DESIGN — Horizontal accordion ============ */
 function DesignShowcase() {
   const items = [
-    { t: "Folio Bank", k: "Brand system · Product UI", s: "fintech-dark", c: "Reimagined a private banking interface from typography up." },
+    { t: "King Eric", k: "Editorial design · Web interactive", s: "collar-up", c: "Designed a digital retrospective exploring the career, philosophy, and distinct style of the Manchester United icon." },
     { t: "Numa Studio", k: "Identity · Website", s: "studio-website", c: "A monochrome identity for a Lisbon-based architecture practice." },
     { t: "Orbit Health", k: "Product · App", s: "health-app", c: "Onboarding and dashboard for a habit tracker that respects attention." },
     { t: "Field Notes", k: "Editorial · Web", s: "editorial-web", c: "Slow-reading magazine with a custom long-form publishing system." },
-    { t: "Hexa Coffee", k: "Packaging · E-commerce", s: "coffee-pack", c: "Shopify build paired with a tactile, plate-driven visual identity." },
+    { t: "Take Off Your Mask", k: "Poster design · Editorial art", s: "unmasked", c: "Designed a high-contrast editorial poster combining surreal portrait manipulation with bold typography to explore themes of authenticity." }
   ];
   const [open, setOpen] = useState(0);
 
@@ -366,7 +421,7 @@ function DesignShowcase() {
                 open === i ? "flex-[4]" : "flex-[1]"
               }`}
             >
-              <img src={img(it.s, 1400, 1200)} alt={it.t} className={`absolute inset-0 w-full h-full object-cover transition-all duration-[1200ms] ${open === i ? "grayscale-0 scale-100" : "grayscale scale-110 opacity-70"}`} />
+              <img src={`/assets/demo ${i + 6}.jpg`} alt={it.t} className={`absolute inset-0 w-full h-full object-cover transition-all duration-[1200ms] ${open === i ? "grayscale-0 scale-100" : "grayscale scale-110 opacity-70"}`} />
               <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
               <div className="absolute inset-0 p-6 flex flex-col justify-between">
                 <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-cream/80">N° {String(i + 1).padStart(2, "0")}</span>
@@ -386,7 +441,7 @@ function DesignShowcase() {
         <div className="md:hidden space-y-3">
           {items.map((it, i) => (
             <div key={it.s} className="relative h-64 rounded-xl overflow-hidden">
-              <img src={img(it.s, 800, 600)} alt={it.t} className="absolute inset-0 w-full h-full object-cover" />
+              <img src={`/assets/demo ${i + 6}.jpg`} alt={it.t} className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-ink to-transparent" />
               <div className="absolute bottom-4 left-4 right-4">
                 <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-ember">N° {String(i + 1).padStart(2, "0")}</div>
@@ -467,37 +522,158 @@ function Testimonials() {
   );
 }
 
+/* ============ MAD LIBS CONTACT FORM ============ */
+function ContactForm() {
+  const [name, setName] = useState("");
+  const [service, setService] = useState("");
+  const [company, setCompany] = useState("");
+  const [timeline, setTimeline] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const subject = encodeURIComponent(`Project inquiry from ${name || "a new friend"}`);
+    const body = encodeURIComponent(
+      `Hi, my name is ${name || "[your name]"} and I'm looking to collaborate on a ${service || "[service]"} project for ${company || "[your company]"}. Our goal is to launch this by ${timeline || "[timeline]"}. You can reach me at ${email || "[your email]"} or by phone at ${phone || "[your phone]"} to start the conversation.`
+    );
+    window.open(`mailto:dylan@dylanhuynh.com?subject=${subject}&body=${body}`, "_blank");
+  };
+
+  const inputClass = "bg-transparent border-b-2 border-cream/20 text-cream font-medium px-1 py-0.5 outline-none transition-all duration-300 focus:border-ember hover:border-cream/50 placeholder:text-cream/30 min-w-[100px] max-w-[180px] md:min-w-[130px]";
+  const selectTriggerClass = "inline-flex items-center gap-1 border-b-2 border-cream/20 text-cream font-medium px-1 py-0.5 outline-none transition-all duration-300 focus:border-ember hover:border-cream/50 min-w-[100px] max-w-[180px] md:min-w-[130px] h-auto w-auto rounded-none bg-transparent shadow-none focus:ring-0 data-[placeholder]:text-cream/30 cursor-pointer";
+
+  return (
+    <form onSubmit={handleSubmit} className="font-sans text-lg md:text-xl text-cream/80 leading-relaxed max-w-4xl">
+      <p className="mb-8">
+        Hi, my name is{" "}
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="your name"
+          className={inputClass}
+          required
+        />{" "}
+        and I'm looking to collaborate on a{" "}
+        <Select value={service} onValueChange={setService} name="service">
+          <SelectTrigger className={selectTriggerClass}>
+            <SelectValue placeholder="select service" />
+          </SelectTrigger>
+          <SelectContent className="border-cream/10 bg-ink text-cream">
+            <SelectItem value="Photography">Photography</SelectItem>
+            <SelectItem value="Design">Design</SelectItem>
+            <SelectItem value="Social Media">Social Media</SelectItem>
+            <SelectItem value="A Mix of Services">A Mix of Services</SelectItem>
+          </SelectContent>
+        </Select>{" "}
+        project for{" "}
+        <input
+          type="text"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          placeholder="your company (optional)"
+          className={inputClass}
+        />.{" "}
+        Our goal is to launch this by{" "}
+        <Select value={timeline} onValueChange={setTimeline} name="timeline">
+          <SelectTrigger className={selectTriggerClass}>
+            <SelectValue placeholder="select timeline" />
+          </SelectTrigger>
+          <SelectContent className="border-cream/10 bg-ink text-cream">
+            <SelectItem value="As soon as possible">As soon as possible</SelectItem>
+            <SelectItem value="In 1-2 months">In 1-2 months</SelectItem>
+            <SelectItem value="Just planning ahead">Just planning ahead</SelectItem>
+          </SelectContent>
+        </Select>
+        . You can reach me at{" "}
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="your email address"
+          className={inputClass}
+          required
+        />{" "}
+        or by phone at{" "}
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="your phone number"
+          className={inputClass}
+        />{" "}
+        to start the conversation.
+      </p>
+      <button
+        type="submit"
+        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-cream text-ink font-medium text-base hover:bg-ember hover:text-ink transition-all duration-300"
+      >
+        Send Message <span aria-hidden>→</span>
+      </button>
+    </form>
+  );
+}
+
 /* ============ FOOTER / CTA ============ */
 function Footer() {
   return (
-    <footer id="contact" className="relative py-32 md:py-48 px-6 border-t border-cream/10">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="font-display text-[clamp(3rem,9vw,8rem)] leading-[0.9] tracking-tight text-cream text-balance">
-          Let's build something
-          <br />
-          <span className="text-ember italic">unmissable.</span>
-        </h2>
-        <div className="mt-16 grid md:grid-cols-3 gap-8 border-t border-cream/15 pt-12">
-          <div>
-            <div className="font-mono text-xs uppercase tracking-[0.3em] text-cream/50 mb-3">Email</div>
-            <a href="mailto:dylan@dylanhuynh.com" className="text-cream text-lg hover:text-ember transition">dylan@dylanhuynh.com</a>
+    <footer id="contact" className="relative w-full overflow-hidden">
+      <img
+        src="/assets/footer 2.jpg"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-ink/30 via-transparent to-ink/60 z-[1]" />
+      <div className="relative z-[2] px-6 py-24 md:py-32">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="font-display text-[clamp(2.5rem,7vw,6rem)] leading-[0.9] tracking-tight text-cream text-balance">
+            Let's build something
+            <br />
+            <span className="text-ember italic">unmissable.</span>
+          </h2>
+
+          <div className="mt-14 mb-20 border-t border-cream/10 pt-12">
+            <ContactForm />
           </div>
-          <div>
-            <div className="font-mono text-xs uppercase tracking-[0.3em] text-cream/50 mb-3">Studio</div>
-            <div className="text-cream text-lg">Tehran · Lisbon</div>
-          </div>
-          <div>
-            <div className="font-mono text-xs uppercase tracking-[0.3em] text-cream/50 mb-3">Elsewhere</div>
-            <div className="flex gap-4 text-cream">
-              <a href="#" className="hover:text-ember">Instagram</a>
-              <a href="#" className="hover:text-ember">Behance</a>
-              <a href="#" className="hover:text-ember">LinkedIn</a>
+
+          <div className="grid md:grid-cols-3 gap-8 border-t border-cream/10 pt-12">
+            <div>
+              <div className="font-mono text-xs uppercase tracking-[0.3em] text-cream/50 mb-3">Email</div>
+              <a href="mailto:dylan@dylanhuynh.com" className="text-cream text-lg hover:text-ember transition">dylan@dylanhuynh.com</a>
+            </div>
+            <div>
+              <div className="font-mono text-xs uppercase tracking-[0.3em] text-cream/50 mb-3">Studio</div>
+              <div className="text-cream text-lg">Tehran · Lisbon</div>
+            </div>
+            <div>
+              <div className="font-mono text-xs uppercase tracking-[0.3em] text-cream/50 mb-3">Elsewhere</div>
+              <div className="flex gap-4 text-cream">
+                <a href="#" className="hover:text-ember">Instagram</a>
+                <a href="#" className="hover:text-ember">Behance</a>
+                <a href="#" className="hover:text-ember">LinkedIn</a>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="mt-16 flex items-center justify-between font-mono text-xs text-cream/40 uppercase tracking-[0.3em]">
-          <span>© Dylan Huynh · MMXXVI</span>
-          <span>Built with care, not haste</span>
+
+          <div className="mt-12 flex items-center justify-between font-mono text-xs text-cream/40 uppercase tracking-[0.3em]">
+            <span>© Dylan Huynh · MMXXVI</span>
+            <span className="flex items-center gap-1 lowercase normal-case tracking-normal">
+              made with{" "}
+              <svg className="h-3.5 w-3.5 text-ember inline-block" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>{" "}
+              by{" "}
+              <a
+                href="https://www.facebook.com/profile.php?id=61590422384756"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-ember transition"
+              >
+                autosynapse
+              </a>
+            </span>
+          </div>
         </div>
       </div>
     </footer>
