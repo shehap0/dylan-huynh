@@ -4,7 +4,7 @@ import { u as useGSAP } from "../_libs/gsap__react.mjs";
 import { R as Root2, V as Value, T as Trigger, I as Icon, P as Portal, C as Content2, a as Viewport, b as Item, c as ItemIndicator, d as ItemText, S as ScrollUpButton, e as ScrollDownButton, L as Label, f as Separator } from "../_libs/radix-ui__react-select.mjs";
 import { c as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-import { u as useMotionValue, a as animate, m as motion, b as useSpring, c as useTransform } from "../_libs/framer-motion.mjs";
+import { m as motion, u as useMotionValue, a as animate, b as useSpring, c as useTransform } from "../_libs/framer-motion.mjs";
 import { C as ChevronDown, a as Check, b as ChevronUp } from "../_libs/lucide-react.mjs";
 import "../_libs/react-dom.mjs";
 import "util";
@@ -237,7 +237,9 @@ function Intro({
     } })
   ] });
 }
-function Nav() {
+function Nav({
+  visible
+}) {
   const [light, setLight] = reactExports.useState(false);
   reactExports.useEffect(() => {
     const el = document.getElementById("top");
@@ -248,7 +250,18 @@ function Nav() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("nav", { className: "fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[min(94vw,1100px)]", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `flex items-center justify-between px-3 py-3 rounded-full border transition-colors duration-500 ${light ? "border-black/10 bg-white/70 backdrop-blur-xl shadow-sm" : "border-cream/10 bg-ink/60 backdrop-blur-xl shadow-2xl"}`, children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(motion.nav, { initial: {
+    y: -120
+  }, animate: visible ? {
+    y: 0
+  } : {
+    y: -120
+  }, transition: {
+    duration: 0.7,
+    ease: [0.16, 1, 0.3, 1]
+  }, className: "fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[min(94vw,1100px)]", style: {
+    pointerEvents: visible ? "auto" : "none"
+  }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `flex items-center justify-between px-3 py-3 rounded-full border transition-colors duration-500 ${light ? "border-black/10 bg-white/70 backdrop-blur-xl shadow-sm" : "border-cream/10 bg-ink/60 backdrop-blur-xl shadow-2xl"}`, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: "#top", className: "flex items-center gap-2 pl-4", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "h-2 w-2 rounded-full bg-ember" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `font-display font-bold tracking-tight transition-colors duration-500 ${light ? "text-black" : "text-cream"}`, children: "Dylan Huynh" })
@@ -879,7 +892,7 @@ function Home() {
   }, [intro]);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "overflow-x-hidden w-full max-w-full bg-background text-foreground", children: [
     intro && /* @__PURE__ */ jsxRuntimeExports.jsx(Intro, { onDone: () => setIntro(false) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Nav, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Nav, { visible: !intro }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Hero, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Disciplines, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(SocialShowcase, {}),

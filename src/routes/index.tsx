@@ -110,7 +110,7 @@ function Intro({ onDone }: { onDone: () => void }) {
 }
 
 /* ============ NAV ============ */
-function Nav() {
+function Nav({ visible }: { visible: boolean }) {
   const [light, setLight] = useState(false);
 
   useEffect(() => {
@@ -125,7 +125,13 @@ function Nav() {
   }, []);
 
   return (
-    <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[min(94vw,1100px)]">
+    <motion.nav
+      initial={{ y: -120 }}
+      animate={visible ? { y: 0 } : { y: -120 }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[min(94vw,1100px)]"
+      style={{ pointerEvents: visible ? "auto" : "none" }}
+    >
       <div className={`flex items-center justify-between px-3 py-3 rounded-full border transition-colors duration-500 ${
         light
           ? "border-black/10 bg-white/70 backdrop-blur-xl shadow-sm"
@@ -156,7 +162,7 @@ function Nav() {
           Start a project
         </a>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
 
@@ -843,7 +849,7 @@ function Home() {
   return (
     <main className="overflow-x-hidden w-full max-w-full bg-background text-foreground">
       {intro && <Intro onDone={() => setIntro(false)} />}
-      <Nav />
+      <Nav visible={!intro} />
       <Hero />
       <Disciplines />
       <SocialShowcase />

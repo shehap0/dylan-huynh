@@ -17,7 +17,7 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-const appCss = "/assets/styles-DsB6Z6W2.css";
+const appCss = "/assets/styles-DFEuqkV8.css";
 function reportLovableError(error, context = {}) {
   if (typeof window === "undefined") return;
   window.__lovableEvents?.captureException?.(
@@ -119,7 +119,7 @@ function RootComponent() {
   const { queryClient } = Route$1.useRouteContext();
   return /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {}) });
 }
-const $$splitComponentImporter = () => import("./index-BGrcpWww.mjs");
+const $$splitComponentImporter = () => import("./index-CRdJmcnd.mjs");
 if (typeof window !== "undefined") {
   gsapWithCSS.registerPlugin(ScrollTrigger, useGSAP);
 }
