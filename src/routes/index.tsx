@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { motion, useMotionValue, useSpring, useTransform, animate } from "framer-motion";
 import {
   Select,
   SelectContent,
@@ -110,21 +111,48 @@ function Intro({ onDone }: { onDone: () => void }) {
 
 /* ============ NAV ============ */
 function Nav() {
+  const [light, setLight] = useState(false);
+
+  useEffect(() => {
+    const el = document.getElementById("top");
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setLight(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[min(94vw,1100px)]">
-      <div className="flex items-center justify-between px-3 py-3 rounded-full border border-cream/10 bg-transparent backdrop-blur-none shadow-2xl">
+      <div className={`flex items-center justify-between px-3 py-3 rounded-full border transition-colors duration-500 ${
+        light
+          ? "border-black/10 bg-white/70 backdrop-blur-xl shadow-sm"
+          : "border-cream/10 bg-ink/60 backdrop-blur-xl shadow-2xl"
+      }`}>
         <a href="#top" className="flex items-center gap-2 pl-4">
           <span className="h-2 w-2 rounded-full bg-ember" />
-          <span className="font-display font-bold tracking-tight text-cream">Dylan Huynh</span>
+          <span className={`font-display font-bold tracking-tight transition-colors duration-500 ${
+            light ? "text-black" : "text-cream"
+          }`}>
+            Dylan Huynh
+          </span>
         </a>
         <ul className="hidden md:flex items-center gap-1 text-sm">
           {[["Social", "#social"], ["Photography", "#photography"], ["Design", "#design"], ["Voices", "#voices"]].map(([l, h]) => (
             <li key={l}>
-              <a href={h} className="px-4 py-2 rounded-full text-cream/70 hover:text-cream hover:bg-cream/5 transition">{l}</a>
+              <a href={h} className={`px-4 py-2 rounded-full transition-all duration-500 ${
+                light
+                  ? "text-black/60 hover:text-black hover:bg-black/5"
+                  : "text-cream/70 hover:text-cream hover:bg-cream/5"
+              }`}>{l}</a>
             </li>
           ))}
         </ul>
-        <a href="#contact" className="px-5 py-2.5 rounded-full bg-cream text-ink text-sm font-medium hover:bg-ember transition">
+        <a href="#contact" className={`px-5 py-2.5 rounded-full text-ink text-sm font-medium transition-all duration-500 ${
+          light ? "bg-ember hover:bg-ember/80" : "bg-cream hover:bg-ember"
+        }`}>
           Start a project
         </a>
       </div>
@@ -132,47 +160,166 @@ function Nav() {
   );
 }
 
-/* ============ HERO — Cinematic Center ============ */
-function Hero() {
+/* ============ HERO — Premium Editorial ============ */
+const galleryImages = Array.from({ length: 26 }, (_, i) => ({
+  url: `/assets/hero/demo ${11 + i}.jpg`,
+}));
+
+// Curated pattern of widths, heights, and vertical alignments.
+// This creates a rhythmic, asymmetric layout that loops seamlessly.
+const DESIGN_PATTERN = [
+  { w: 340, h: 480, align: "self-start", mt: "translate-y-0" },
+  { w: 240, h: 340, align: "self-center", mt: "translate-y-12" },
+  { w: 400, h: 300, align: "self-end", mt: "-translate-y-6" },
+  { w: 280, h: 420, align: "self-start", mt: "translate-y-4" },
+  { w: 200, h: 260, align: "self-center", mt: "translate-y-16" },
+  { w: 460, h: 520, align: "self-start", mt: "-translate-y-8" },
+  { w: 260, h: 380, align: "self-end", mt: "translate-y-8" },
+  { w: 320, h: 320, align: "self-center", mt: "-translate-y-2" },
+];
+
+function TiltCard({ src, w, h, align, mt }: { src: string; w: number; h: number; align: string; mt: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [8, -8]), { stiffness: 200, damping: 20 });
+  const rotateY = useSpring(useTransform(mx, [-0.5, 0.5], [-8, 8]), { stiffness: 200, damping: 20 });
+
+  const handleMouse = useCallback((e: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+    mx.set((e.clientX - rect.left) / rect.width - 0.5);
+    my.set((e.clientY - rect.top) / rect.height - 0.5);
+  }, [mx, my]);
+
+  const handleLeave = useCallback(() => {
+    animate(mx, 0, { type: "spring", stiffness: 200, damping: 20 });
+    animate(my, 0, { type: "spring", stiffness: 200, damping: 20 });
+  }, [mx, my]);
+
   return (
-    <section id="top" className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-32 pb-24 overflow-hidden">
-      <div className="absolute inset-0 -z-10">
-        <img
-          src={img("studio-window", 2400, 1400)}
-          alt=""
-          className="w-full h-full object-cover opacity-40 grayscale contrast-125"
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,var(--background)_70%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,var(--background)_0%,transparent_30%,transparent_60%,var(--background)_100%)]" />
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={handleLeave}
+      style={{ rotateX, rotateY, perspective: 1200, width: w, height: h }}
+      className={`relative shrink-0 group overflow-hidden rounded-sm cursor-grab active:cursor-grabbing ${align} ${mt}`}
+    >
+      <img src={src} alt="" className="w-full h-full object-cover" draggable={false} />
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
+    </motion.div>
+  );
+}
+
+function Hero() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const xMotion = useMotionValue(0);
+  const controlsRef = useRef<ReturnType<typeof animate> | null>(null);
+  const doubled = [...galleryImages, ...galleryImages];
+
+  const startAutoScroll = useCallback(() => {
+    if (!trackRef.current) return;
+    const halfWidth = trackRef.current.scrollWidth / 2;
+    const currentX = xMotion.get();
+    const remaining = Math.abs(-halfWidth - currentX);
+    const duration = (remaining / halfWidth) * 50; // Increased to 50 for a smoother, premium slow pace
+    
+    controlsRef.current = animate(xMotion, -halfWidth, {
+      ease: "linear",
+      duration,
+      onComplete: () => {
+        xMotion.set(0);
+        startAutoScroll();
+      },
+    });
+  }, [xMotion]);
+
+  useEffect(() => {
+    const timer = setTimeout(startAutoScroll, 100);
+    return () => {
+      controlsRef.current?.stop();
+      clearTimeout(timer);
+    };
+  }, [startAutoScroll]);
+
+  const handleDragUpdate = useCallback(() => {
+    if (!trackRef.current) return;
+    const halfWidth = trackRef.current.scrollWidth / 2;
+    const x = xMotion.get();
+    if (x < -halfWidth) xMotion.set(x + halfWidth);
+    else if (x > 0) xMotion.set(x - halfWidth);
+  }, [xMotion]);
+
+  return (
+    <section
+      id="top"
+      className="relative min-h-screen bg-[#f7f7f5] text-black flex flex-col justify-between overflow-hidden"
+    >
+      {/* text block */}
+      <div className="px-8 md:px-14 pt-24 md:pt-28 pb-4 relative z-30">
+        <motion.h1
+          initial={{ opacity: 0, y: 80 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+          className="font-display font-bold leading-[0.85] tracking-[-0.05em] text-black max-w-5xl"
+          style={{ fontSize: "clamp(4rem, 12vw, 10rem)" }}
+        >
+          CREATIVE
+          <br />
+          FORCE
+        </motion.h1>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+          className="mt-6 max-w-2xl"
+        >
+          <p className="font-sans text-sm md:text-base leading-relaxed text-black/70">
+            DYLAN HUYNH — VISUAL STORYTELLER &amp; DESIGNER SPECIALIZING IN LUXURY BRANDS, SOCIAL CAMPAIGNS, AND HIGH-END PHOTOGRAPHY.
+          </p>
+          <p className="font-mono text-xs tracking-[0.3em] text-black/50 mt-4">
+            SOCIAL. PHOTOGRAPHY. DESIGN. 3D VISUALS.
+          </p>
+        </motion.div>
       </div>
 
-      <div className="font-mono text-xs uppercase tracking-[0.4em] text-cream/50 mb-10">
-        Tehran · Lisbon · remote
-      </div>
-
-      <h1 className="font-display font-bold text-balance text-center max-w-6xl leading-[0.95] tracking-tight text-cream"
-          style={{ fontSize: "clamp(3rem, 7.5vw, 6.5rem)" }}>
-        We craft the
-        <span className="inline-block align-middle mx-3 md:mx-5 h-[0.7em] w-[1.6em] rounded-full bg-cover bg-center"
-              style={{ backgroundImage: "url(/assets/japan.jpg)" }} />
-        feed, the frame and the brand behind ambitious work.
-      </h1>
-
-      <p className="mt-10 max-w-xl text-center text-cream/60 text-lg leading-relaxed">
-        An independent studio shaping social campaigns, editorial photography and digital design for brands that refuse to look average.
-      </p>
-
-      <div className="mt-12 flex flex-wrap gap-3 justify-center">
-        <a href="#social" className="px-7 py-4 rounded-full bg-cream text-ink font-medium hover:bg-ember transition">
-          See our work
-        </a>
-        <a href="#contact" className="px-7 py-4 rounded-full border border-cream/30 text-cream hover:bg-cream/5 transition">
-          Book a call
-        </a>
-      </div>
-
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] uppercase tracking-[0.4em] text-cream/40">
-        Scroll · three disciplines, one studio
+      {/* gallery — items aligned dynamically instead of flat baseline */}
+      <div
+        className="relative w-full overflow-hidden my-auto py-12 md:py-16 z-20"
+        style={{ marginTop: -100 }}
+      >
+        <motion.div
+          ref={trackRef}
+          style={{ x: xMotion }}
+          drag="x"
+          dragElastic={0.08}
+          onDrag={handleDragUpdate}
+          onDragStart={() => controlsRef.current?.stop()}
+          onDragEnd={() => {
+            handleDragUpdate();
+            startAutoScroll();
+          }}
+          className="flex gap-8 md:gap-10 w-max items-center h-[580px] px-8 md:px-14"
+        >
+          {doubled.map((img, i) => {
+            const config = DESIGN_PATTERN[i % DESIGN_PATTERN.length];
+            return (
+              <TiltCard 
+                key={`${img.url}-${i}`} 
+                src={img.url} 
+                w={config.w} 
+                h={config.h} 
+                align={config.align} 
+                mt={config.mt} 
+              />
+            );
+          })}
+        </motion.div>
+        
+        {/* soft subtle gradients over the edges to blend the infinite loop transition */}
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#f7f7f5] via-[#f7f7f5]/80 to-transparent pointer-events-none z-[2]" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#f7f7f5] via-[#f7f7f5]/80 to-transparent pointer-events-none z-[2]" />
       </div>
     </section>
   );
@@ -625,7 +772,7 @@ function Footer() {
         className="absolute inset-0 w-full h-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-ink/30 via-transparent to-ink/60 z-[1]" />
-      <div className="relative z-[2] px-6 py-24 md:py-32">
+      <div className="relative z-[2] px-6 pt-24 md:pt-32 pb-12">
         <div className="max-w-6xl mx-auto">
           <h2 className="font-display text-[clamp(2.5rem,7vw,6rem)] leading-[0.9] tracking-tight text-cream text-balance">
             Let's build something
