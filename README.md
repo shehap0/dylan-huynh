@@ -11,12 +11,11 @@ Portfolio website for Dylan Huynh — an independent studio crafting social medi
 | Section | Description |
 |---|---|
 | **Intro Loader** | Full-screen loading overlay with animated counting and staggered reveal of "DYLAN HUNNH" |
-| **Hero** | Light-background (`#f7f7f5`) splash with "CREATIVE FORCE / DIGITAL DESIGN" heading, draggable 3D-tilt gallery, and auto-scroll marquee of 26 images |
+| **Hero** | Light-background (`#f7f7f5`) splash with "CREATIVE FORCE / DIGITAL DESIGN" heading, draggable 3D-tilt gallery, and auto-scroll marquee of images |
 | **Stats** | Counter strip (Projects / Awards / Years / Clients) with animated CountUp on scroll |
 | **Photography** | 5-image editorial grid (demo 1–5) with GSAP grayscale-to-color scroll-triggered reveal |
 | **Design** | 5-image design showcase (demo 6–10) with GSAP blur-to-clear scroll-triggered reveal |
-| **About** | Full-width "Japan" image (`japan.jpg`) with overlapping bio text, start-a-project CTA |
-| **Footer / Contact** | Mad Libs-style contact form with Radix Select dropdowns for budget and service, split backdrop image (`footer 2.jpg`), Autosynapse credit |
+| **Footer / Contact** | Mad Libs-style contact form with Radix Select dropdowns for budget and service, split backdrop image, Autosynapse credit |
 
 ---
 
@@ -62,10 +61,8 @@ All images served from `public/assets/`:
 
 | Folder | Contents |
 |---|---|
-| `public/assets/hero/` | `demo 11.jpg`–`36.jpg` (26 images for draggable gallery) |
-| `public/assets/` | `demo 1.jpg`–`10.jpg` (photography & design), `japan.jpg` (about backdrop), `footer 2.jpg` (footer bg) |
-
-Images with spaces in filenames require CSS `url("...")` quoting when referenced as `backgroundImage`.
+| `public/assets/hero/` | (for draggable gallery) |
+| `public/assets/` | (photography & design), (about backdrop), (footer bg) |
 
 ---
 
